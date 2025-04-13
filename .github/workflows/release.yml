@@ -1,0 +1,108 @@
+name: GPSD Kafka Helm Chart CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint Helm Chart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+      
+      - name: Run Helm lint
+        run: helm lint ./helm
+  
+  # Check for version bump needs - only on main branch
+  check-version:
+    name: Check Version
+    if: github.ref == 'refs/heads/main'
+    needs: [lint]
+    runs-on: ubuntu-latest
+    outputs:
+      changes: ${{ steps.check_changes.outputs.changes }}
+      new_version: ${{ steps.bump_version.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Determine if version bump needed
+        id: check_changes
+        run: |
+          if git log $(git describe --tags --abbrev=0 2>/dev/null || echo 'v0.0.0')..HEAD --pretty=format:%s | grep -E "^(feat|fix|BREAKING CHANGE)"; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Setup git
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+      
+      - name: Update changelog
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          chmod +x ./scripts/update-changelog.sh
+          ./scripts/update-changelog.sh
+      
+      - name: Bump version
+        id: bump_version
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          chmod +x ./scripts/bump-version.sh
+          ./scripts/bump-version.sh
+      
+      - name: Commit changes
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git add helm/Chart.yaml CHANGELOG.md
+          git commit -m "chore: bump version to ${{ steps.bump_version.outputs.new_version }}"
+          git tag -a "v${{ steps.bump_version.outputs.new_version }}" -m "Release v${{ steps.bump_version.outputs.new_version }}"
+          git push origin main --tags
+  
+  # Package and publish Helm chart
+  publish-helm:
+    name: Publish Helm Chart
+    if: needs.check-version.outputs.changes == 'true'
+    needs: [check-version]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+      
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Setup git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Package Helm chart
+        run: |
+          mkdir -p /tmp/gpsd/
+          helm package ./helm -d /tmp/gpsd/
+          helm repo index /tmp/gpsd --url https://gpsd-ase.github.io/gpsd-kafka/ --merge /tmp/gpsd/index.yaml
+
+      - name: Publish to GitHub Pages
+        run: |
+          git fetch origin gh-pages || true
+          git checkout gh-pages || git checkout -b gh-pages
+          cp /tmp/gpsd/* .
+          git add .
+          git commit -m "chore: update helm chart to v${{ needs.check-version.outputs.new_version }}"
+          git push origin gh-pages
