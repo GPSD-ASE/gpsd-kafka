@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.4] - 2025-04-13
+## [0.0.5] - 2025-04-13
 
 
 ### Fixed
-\n580a60a fix: add dynamic retrieval pod name, namespace for kafka startup
+\na708dbc fix: try once again with with helm inserting values dynamically
 
