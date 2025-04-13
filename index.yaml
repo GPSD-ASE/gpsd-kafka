@@ -3,12 +3,12 @@ entries:
   gpsd-kafka:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-04-13T16:01:24.606583866Z"
+    created: "2025-04-13T16:14:57.376272318Z"
     description: A Helm chart for deploying Kafka with KRaft mode for GPSD.
-    digest: ce3a4066dba3ebbee94779f97066ed49446576b2a24a673a86583c4fc702fb2b
+    digest: bdea29af2c2f8a1aa486af26a221598600acd42daeb91d32a87e37adde4b9b36
     name: gpsd-kafka
     type: application
     urls:
-    - https://gpsd-ase.github.io/gpsd-kafka/gpsd-kafka-0.0.2.tgz
-    version: 0.0.2
-generated: "2025-04-13T16:01:24.606084779Z"
+    - https://gpsd-ase.github.io/gpsd-kafka/gpsd-kafka-0.0.3.tgz
+    version: 0.0.3
+generated: "2025-04-13T16:14:57.37578694Z"
