@@ -1,0 +1,17 @@
+{{- if .Values.broker.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-gpsd-kafka-broker-pvc
+  labels:
+    app: {{ .Release.Name }}-gpsd-kafka-broker
+spec:
+  accessModes:
+    - {{ .Values.broker.persistence.accessMode | quote }}
+  {{- if .Values.broker.persistence.storageClass }}
+  storageClassName: {{ .Values.broker.persistence.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.broker.persistence.size | quote }}
+{{- end }}

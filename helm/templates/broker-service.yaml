@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-gpsd-kafka-broker
+  labels:
+    app: {{ .Release.Name }}-gpsd-kafka-broker
+spec:
+  ports:
+    {{- range .Values.broker.service }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .targetPort }}
+      {{- if .nodePort }}
+      nodePort: {{ .nodePort }}
+      {{- end }}
+    {{- end }}
+  selector:
+    app: {{ .Release.Name }}-gpsd-kafka-broker
+  {{- with .Values.broker.service | first }}
+  type: {{ .type | default "ClusterIP" }}
+  {{- end }}

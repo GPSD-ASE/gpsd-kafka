@@ -1,0 +1,37 @@
+{{- if .Values.kafkaUi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-gpsd-kafka-ui
+  labels:
+    app: {{ .Release.Name }}-gpsd-kafka-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-gpsd-kafka-ui
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-gpsd-kafka-ui
+    spec:
+      serviceAccountName: {{ .Release.Name }}-sa
+      containers:
+        - name: gpsd-kafka-ui
+          image: "{{ .Values.kafkaUi.image.repository }}:{{ .Values.kafkaUi.image.tag }}"
+          imagePullPolicy: {{ .Values.kafkaUi.image.pullPolicy }}
+          ports:
+            {{- range .Values.kafkaUi.service }}
+            - containerPort: {{ .targetPort }}
+              name: {{ .name }}
+            {{- end }}
+          env:
+            {{- range $key, $value := .Values.kafkaUi.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+              value: "{{ .Release.Name }}-kafka-broker:29092"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+{{- end }}

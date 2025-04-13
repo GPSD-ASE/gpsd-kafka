@@ -1,0 +1,61 @@
+namespace: gpsd
+
+replicaCount: 1
+
+broker:
+  image:
+    repository: apache/kafka
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  service:
+    - name: kafka
+      type: ClusterIP
+      port: 9092
+      targetPort: 9092
+    - name: internal
+      type: ClusterIP
+      port: 29092
+      targetPort: 29092
+  
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    
+  config:
+    brokerId: 1
+    nodeId: 1
+    clusterId: "MkU3OEVBNTcwNTJENDM2Qk"
+    replicationFactor: 1
+    logDirs: "/tmp/kraft-combined-logs"
+
+kafkaUi:
+  enabled: true
+  image:
+    repository: provectuslabs/kafka-ui
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  service:
+    - name: http
+      type: ClusterIP
+      port: 8080
+      targetPort: 8080
+    
+  env:
+    KAFKA_CLUSTERS_0_NAME: "local"
+    KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka-broker:29092"
+
+serviceAccount:
+  create: true
+  name: gpsd-kafka-sa
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80

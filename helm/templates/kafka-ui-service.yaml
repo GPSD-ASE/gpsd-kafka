@@ -1,0 +1,23 @@
+{{- if .Values.kafkaUi.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-gpsd-kafka-ui
+  labels:
+    app: {{ .Release.Name }}-gpsd-kafka-ui
+spec:
+  ports:
+    {{- range .Values.kafkaUi.service }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .targetPort }}
+      {{- if .nodePort }}
+      nodePort: {{ .nodePort }}
+      {{- end }}
+    {{- end }}
+  selector:
+    app: {{ .Release.Name }}-gpsd-kafka-ui
+  {{- with .Values.kafkaUi.service | first }}
+  type: {{ .type | default "ClusterIP" }}
+  {{- end }}
+{{- end }}
