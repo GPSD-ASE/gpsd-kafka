@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.2] - 2025-04-13
+## [0.0.3] - 2025-04-13
 
 
 ### Fixed
-\n1c1ad1c fix: add ci/cd
+\n5a40a15 fix: use kafka's fqdn name inside cluster
 
