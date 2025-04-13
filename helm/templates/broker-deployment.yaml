@@ -15,6 +15,10 @@ spec:
         app: {{ .Release.Name }}-gpsd-kafka-broker
     spec:
       serviceAccountName: {{ .Release.Name }}-sa
+      initContainers:
+        - name: wait-for-dns
+          image: busybox:1.34
+          command: ['sh', '-c', 'until nslookup {{ .Release.Name }}-gpsd-kafka-broker.{{ .Values.namespace }}.svc.cluster.local; do echo waiting for DNS; sleep 2; done;']
       containers:
         - name: gpsd-kafka-broker
           image: "{{ .Values.broker.image.repository }}:{{ .Values.broker.image.tag }}"
@@ -30,7 +34,7 @@ spec:
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
               value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT"
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: "PLAINTEXT://{{ .Release.Name }}-gpsd-kafka-broker:29092,PLAINTEXT_HOST://{{ .Release.Name }}-gpsd-kafka-broker:9092"
+              value: "PLAINTEXT://{{ .Release.Name }}-gpsd-kafka-broker.{{ .Values.namespace }}.svc.cluster.local:29092,PLAINTEXT_HOST://{{ .Release.Name }}-gpsd-kafka-broker.{{ .Values.namespace }}.svc.cluster.local:9092"
             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
               value: "{{ .Values.broker.config.replicationFactor }}"
             - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
@@ -44,7 +48,7 @@ spec:
             - name: KAFKA_NODE_ID
               value: "{{ .Values.broker.config.nodeId }}"
             - name: KAFKA_CONTROLLER_QUORUM_VOTERS
-              value: "{{ .Values.broker.config.nodeId }}@{{ .Release.Name }}-gpsd-kafka-broker:29093"
+              value: "{{ .Values.broker.config.nodeId }}@{{ .Release.Name }}-gpsd-kafka-broker.{{ .Values.namespace }}.svc.cluster.local:29093"
             - name: KAFKA_LISTENERS
               value: "PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092"
             - name: KAFKA_INTER_BROKER_LISTENER_NAME

@@ -31,7 +31,7 @@ spec:
               value: {{ $value | quote }}
             {{- end }}
             - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
-              value: "{{ .Release.Name }}-kafka-broker:29092"
+              value: "{{ .Release.Name }}-gpsd-kafka-broker.{{ .Values.namespace }}.svc.cluster.local:29092"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 {{- end }}
